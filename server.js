@@ -8,6 +8,7 @@ const register = require('./controllers/register')
 const signin = require('./controllers/signin')
 const profile = require('./controllers/profile')
 const image = require('./controllers/image')
+const users = require('./controllers/users')
 
 // connecting to postgres using knex
 const db = knex({
@@ -27,7 +28,8 @@ const app = express()
 app.use(bodyParser.json())
 app.use(cors())
 
-app.get('/', (req, res) => res.send(database.users))
+// Get all users
+app.get('/users', (req, res) => { users.handleGetUsers(req, res, db) })
 
 app.post('/signin', (req, res) => { signin.handleSignin(req, res, db, bcrypt) })
 
