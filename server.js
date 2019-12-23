@@ -22,27 +22,6 @@ const app = express()
 app.use(bodyParser.json())
 app.use(cors())
 
-const database = {
-  users: [
-    {
-      id: '120',
-      name: 'Peter',
-      email: 'peters@gmail.com',
-      password: 'oranges',
-      entries: 0,
-      joined: new Date()
-    },
-    {
-      id: '121',
-      name: 'Martha',
-      email: 'martha@gmail.com',
-      password: 'martta',
-      entries: 0,
-      joined: new Date()
-    }
-  ]
-}
-
 app.get('/', (req, res) => res.send(database.users))
 
 app.post('/signin', (req, res) => {
@@ -70,7 +49,7 @@ app.post('/signin', (req, res) => {
       }
     })
     .catch(error => {
-      res.status(400).json("an error occured and we couldn't get this user")
+      res.status(400).json("wrong credentials")
     })
 
 })
@@ -107,15 +86,9 @@ app.post('/register', (req, res) => {
         .then(trx.commit)
         .catch(trx.rollback)
     }).catch(err => {
-      res.status(400).json('could not register this user')
+      res.status(400).json('unable to register this user')
     })
 
-
-
-    // bcrypt.hash(password, null, null, function (err, hash) {
-    //   // Store hash in your password DB.
-    //   console.log(password, hash)
-    // });
   }
 
 })
