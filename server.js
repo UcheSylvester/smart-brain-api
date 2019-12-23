@@ -21,9 +21,9 @@ const db = knex({
   }
 });
 
-// db.select('*').from('users').then(data => console.log(data))
-
 const app = express()
+
+const PORT = process.env.PORT || 8080
 
 app.use(bodyParser.json())
 app.use(cors())
@@ -31,7 +31,11 @@ app.use(cors())
 // Get all users
 app.get('/users', (req, res) => { users.handleGetUsers(req, res, db) })
 
+// user sign in
 app.post('/signin', (req, res) => { signin.handleSignin(req, res, db, bcrypt) })
+
+// call to clarifai
+app.post('/imageurl', (req, res) => { image.handleAPIcall(req, res) })
 
 // Registering new user
 app.post('/register', (req, res) => { register.handleRegister(req, res, db, bcrypt) })
@@ -43,7 +47,8 @@ app.get('/profile/:id', (req, res) => { profile.handleGetProfile(req, res, db) }
 app.put('/image', (req, res) => { image.handleImageEntries(req, res, db) })
 
 
-app.listen(8080, () => console.log('app running on port 8080'))
+
+app.listen(PORT, () => console.log(`app running on port ${PORT}`))
 
 /****
   / --> res = this is working

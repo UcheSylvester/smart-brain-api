@@ -1,6 +1,10 @@
 const handleSignin = (req, res, db, bcrypt) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json("incorrect form submission, please enter email and/or password")
+  }
+
   // Getting the email and hash inserted into the login table when registering user
   // and comparing it with the entered password using bcrypt
   // if isValid (login details are correct), return the user else return error 
