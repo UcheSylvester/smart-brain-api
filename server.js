@@ -2,6 +2,20 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt-nodejs')
 const cors = require('cors')
+const knex = require('knex')
+
+// connecting to postgres using knex
+const db = knex({
+  client: 'pg',
+  connection: {
+    host: '127.0.0.1',
+    user: 'postgres',
+    password: '12345',
+    database: 'smart-brain'
+  }
+});
+
+// db.select('*').from('users').then(data => console.log(data))
 
 const app = express()
 
@@ -45,26 +59,30 @@ app.post('/register', (req, res) => {
   if (req.body) {
     const { email, name, password } = req.body
 
+    // Saving the newly resgistered user to the users' table in db using knex
+    db('users')
+      .returning('*')
+      .insert({
+        name: name,
+        email: email,
+        joined: new Date()
+      })
+      .then(user => {
+        res.json({
+          message: 'success',
+          user: user[0]
+        })
+      })
+      .catch(err => {
+        res.status(400).json('could not register this user')
+      })
+
     bcrypt.hash(password, null, null, function (err, hash) {
       // Store hash in your password DB.
       console.log(password, hash)
     });
-
-    database.users.push({
-      id: '123',
-      name: name,
-      email: email,
-      entries: 0,
-      joined: new Date()
-    })
-
-    res.json({
-      message: 'success',
-      user: database.users[database.users.length - 1]
-    })
-  } else {
-    res.status(400).json('input user details to register')
   }
+
 })
 
 // Get a user profile
