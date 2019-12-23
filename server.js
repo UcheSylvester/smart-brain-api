@@ -58,6 +58,7 @@ app.post('/signin', (req, res) => {
 app.post('/register', (req, res) => {
   if (req.body) {
     const { email, name, password } = req.body
+    let userFound = false;
 
     // Saving the newly resgistered user to the users' table in db using knex
     db('users')
@@ -89,11 +90,17 @@ app.post('/register', (req, res) => {
 app.get('/profile/:id', (req, res) => {
   const { id } = req.params
 
-  const user = database.users.find(user => user.id === id)
 
-  return (user) ?
-    res.json({ message: "success", user }) :
-    res.status(400).json('user not found')
+  db.select('*').from('users').where({ id })
+    .then(user => {
+      if (user.length) {
+        res.json(user[0])
+      } else {
+        res.status(400).json('user not found')
+      }
+    })
+    .catch(err => res.status(400).json('error getting user'))
+
 })
 
 // Update user entries
