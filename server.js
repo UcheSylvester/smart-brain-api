@@ -46,42 +46,76 @@ const database = {
 app.get('/', (req, res) => res.send(database.users))
 
 app.post('/signin', (req, res) => {
+  const { email, password } = req.body;
 
-  const user = database.users.find(user => user.email === req.body.email && user.password === req.body.password)
+  // Getting the email and hash inserted into the login table when registering user
+  // and comparing it with the entered password using bcrypt
+  // if isValid (login details are correct), return the user else return error 
+  db.select('email', 'hash').from('login')
+    .where('email', '=', email)
+    .then(data => {
+      const isValid = bcrypt.compareSync(password, data[0].hash)
 
-  return (user) ?
-    res.json({ message: 'success', user }) :
-    res.status(400).json({ message: 'user not found', user })
+      if (isValid) {
+        return db.select('*').from('users')
+          .where('email', '=', email)
+          .then(user => {
+            res.json(user[0])
+          })
+          .catch(error => {
+            res.status(400).json("unable to get user")
+          })
+      } else {
+        res.status(400).json("incorrect email or password")
+      }
+    })
+    .catch(error => {
+      res.status(400).json("an error occured and we couldn't get this user")
+    })
+
 })
 
 // Registering new user
 app.post('/register', (req, res) => {
   if (req.body) {
     const { email, name, password } = req.body
-    let userFound = false;
 
-    // Saving the newly resgistered user to the users' table in db using knex
-    db('users')
-      .returning('*')
-      .insert({
-        name: name,
-        email: email,
-        joined: new Date()
+    // hashing password
+    const hash = bcrypt.hashSync(password);
+
+    // using knex transaction to establish relationship b/w user and login tables
+    db.transaction(trx => {
+      trx.insert({
+        hash: hash,
+        email: email
       })
-      .then(user => {
-        res.json({
-          message: 'success',
-          user: user[0]
+        .into('login')
+        .returning('email')
+        .then(loginEmail => {
+          // Saving the newly resgistered user to the users' table in db using knex
+          return trx('users')
+            .returning('*')
+            .insert({
+              name: name,
+              email: loginEmail[0],
+              joined: new Date()
+            })
+            .then(user => {
+              res.json(user[0])
+            })
         })
-      })
-      .catch(err => {
-        res.status(400).json('could not register this user')
-      })
+        .then(trx.commit)
+        .catch(trx.rollback)
+    }).catch(err => {
+      res.status(400).json('could not register this user')
+    })
 
-    bcrypt.hash(password, null, null, function (err, hash) {
-      // Store hash in your password DB.
-      console.log(password, hash)
-    });
+
+
+    // bcrypt.hash(password, null, null, function (err, hash) {
+    //   // Store hash in your password DB.
+    //   console.log(password, hash)
+    // });
   }
 
 })
@@ -91,7 +125,8 @@ app.get('/profile/:id', (req, res) => {
   const { id } = req.params
 
   // Selecting the user with the id in params
-  db.select('*').from('users').where({ id })
+  db.select('*').from('users')
+    .where({ id })
     .then(user => {
       if (user.length) {
         res.json(user[0])
