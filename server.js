@@ -28,6 +28,8 @@ const PORT = process.env.PORT || 8080
 app.use(bodyParser.json())
 app.use(cors())
 
+
+app.get('/', (req, res) => res.send("it is working"))
 // Get all users
 app.get('/users', (req, res) => { users.handleGetUsers(req, res, db) })
 
