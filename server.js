@@ -14,10 +14,8 @@ const users = require('./controllers/users')
 const db = knex({
   client: 'pg',
   connection: {
-    host: '127.0.0.1',
-    user: 'postgres',
-    password: '12345',
-    database: 'smart-brain'
+    connectionString: process.env.DATBASE_URL,
+    ssl: true
   }
 });
 
